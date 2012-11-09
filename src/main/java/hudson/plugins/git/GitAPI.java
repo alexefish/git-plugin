@@ -363,7 +363,16 @@ public class GitAPI implements IGitAPI {
     }
 
     private void whatchanged(String revFrom, String revTo, OutputStream outputStream, String... extraargs) throws GitException {
-        String revSpec = revFrom + ".." + revTo;
+        String revSpec;
+
+        if(revFrom.equals(revTo))
+        {
+            recSpec = "-1"
+        }
+        else
+        {
+            revSpec = revFrom + ".." + revTo;
+        }
 
         ArgumentListBuilder args = new ArgumentListBuilder();
         args.add(getGitExe(), "log");
