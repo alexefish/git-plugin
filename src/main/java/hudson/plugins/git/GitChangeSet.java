@@ -31,7 +31,7 @@ import java.util.regex.Pattern;
  */
 public class GitChangeSet extends ChangeLogSet.Entry {
 
-    private static final String PREFIX_AUTHOR = "author ";
+    private static final String PREFIX_AUTHOR = "Author ";
     private static final String PREFIX_COMMITTER = "committer ";
     private static final String IDENTITY = "(.*)<(.*)> (.*) (.*)";
     private static final String PREFIX_BRANCH = "Changes in branch ";
