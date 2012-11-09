@@ -36,7 +36,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
     private static final String IDENTITY = "(.*)<(.*)> (.*) (.*)";
     private static final String PREFIX_BRANCH = "Changes in branch ";
     private static final String BRANCH_PATTERN = "([-_a-zA-Z0-9/]*),";
-    
+
 
     private static final Pattern FILE_LOG_ENTRY = Pattern.compile("^:[0-9]{6} [0-9]{6} ([0-9a-f]{40}) ([0-9a-f]{40}) ([ACDMRTUX])(?>[0-9]+)?\t(.*)$");
     private static final Pattern AUTHOR_ENTRY = Pattern.compile("^"
@@ -46,21 +46,27 @@ public class GitChangeSet extends ChangeLogSet.Entry {
     private static final Pattern RENAME_SPLIT = Pattern.compile("^(.*?)\t(.*)$");
     private static final Pattern BRANCH_ENTRY = Pattern.compile("^"
             + PREFIX_BRANCH + BRANCH_PATTERN + " .*$");
-    
+    private static final Pattern INSERTIONS = Pattern.compile("([0-9]+(?:\\.[0-9]*)?) files? changed");
+    private static final Pattern DELETIONS = Pattern.compile("([0-9]+(?:\\.[0-9]*)?) insertions?");
+    private static final Pattern CHANGED = Pattern.compile("([0-9]+(?:\\.[0-9]*)?) deletions?");
+
     private static final String NULL_HASH = "0000000000000000000000000000000000000000";
-    private String branch;
-    private String committer;
-    private String committerEmail;
-    private String committerTime;
-    private String committerTz;
-    private String author;
-    private String authorEmail;
-    private String authorTime;
-    private String authorTz;
-    private String comment;
-    private String title;
-    private String id;
-    private String parentCommit;
+    private String  branch;
+    private String  committer;
+    private String  committerEmail;
+    private String  committerTime;
+    private String  committerTz;
+    private String  author;
+    private String  authorEmail;
+    private String  authorTime;
+    private String  authorTz;
+    private String  comment;
+    private String  title;
+    private Integer filesChanged;
+    private Integer insertions;
+    private Integer deletions;
+    private String  id;
+    private String  parentCommit;
     private Collection<Path> paths = new HashSet<Path>();
     private boolean authorOrCommitter;
 
@@ -111,6 +117,23 @@ public class GitChangeSet extends ChangeLogSet.Entry {
                     this.authorEmail = authorMatcher.group(2);
                     this.authorTime = authorMatcher.group(3);
                     this.authorTz = authorMatcher.group(4);
+                }
+            } else if (line.startsWith(" ")){
+                // Parse changes
+                Matcher insertionsMatcher = INSERTIONS.matcher(line);
+                if(insertionsMatcher.matches())
+                {
+                    this.insertions = Integer.parseInt(insertionsMatcher.group(1));
+                }
+                Matcher deletionsMatcher = DELETIONS.matcher(line);
+                if(deletionsMatcher.matches())
+                {
+                    this.deletions = Integer.parseInt(deletionsMatcher.group(1));
+                }
+                Matcher filesChangedMatcher = CHANGED.matcher(line);
+                if(filesChangedMatcher.matches())
+                {
+                    this.filesChanged = Integer.parseInt(filesChangedMatcher.group(1));
                 }
             } else if (line.startsWith("    ")) {
                 message.append(line.substring(4)).append('\n');
@@ -329,6 +352,21 @@ public class GitChangeSet extends ChangeLogSet.Entry {
     @Exported
     public String getMsg() {
         return this.title;
+    }
+
+    @Exported
+    public Integer getInsertions() {
+        return this.insertions;
+    }
+
+    @Exported
+    public Integer getFilesChanged() {
+        return this.filesChanged;
+    }
+
+    @Exported
+    public Integer getDeletions() {
+        return this.deletions;
     }
 
     @Exported

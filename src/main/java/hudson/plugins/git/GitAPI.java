@@ -273,9 +273,9 @@ public class GitAPI implements IGitAPI {
             throw new GitException("Could not clone " + source, e);
         }
     }
-    
+
     public void clone(final RemoteConfig remoteConfig) throws GitException {
-    	clone(remoteConfig, false);    	
+    	clone(remoteConfig, false);
     }
 
     public void clean() throws GitException {
@@ -390,20 +390,20 @@ public class GitAPI implements IGitAPI {
      */
     public List<String> showRevision(Revision r, BuildData buildData) throws GitException {
     	StringWriter writer = new StringWriter();
-    	String revName = ""; 
-    	
+    	String revName = "";
+
 
     	if (buildData != null && buildData.lastBuild != null){
     		revName = buildData.lastBuild.revision.getSha1String() + ".." + r.getSha1String();
     		writer.write(launchCommand("show", "--no-abbrev", "--format=raw", "-M", "--raw", revName));
     		writer.write("\\n");
     	}
-    	
+
     	revName = r.getSha1String();
-    	writer.write(launchCommand("whatchanged", "--no-abbrev", "-M", "-m", "--pretty=raw", "-1", revName));
+    	writer.write(launchCommand("log", "--shortstat", "-1", revName));
 
         String result = "";
-        
+
         result = writer.toString();
 
         List<String> revShow = new ArrayList<String>();
@@ -847,7 +847,7 @@ public class GitAPI implements IGitAPI {
         }
 
     }
-    
+
     /**
      * Launch command using the workspace as working directory
      * @param args
@@ -886,7 +886,7 @@ public class GitAPI implements IGitAPI {
                 envs(environment).stdout(fos).stderr(err).pwd(workDir).join();
 
             String result = fos.toString();
-            
+
             // JENKINS-13356: do not return the output of stderr, but at least print it somewhere
             // (disabled again, creates too much unwanted output, for example when cloning a repository)
 //            if (err.size() > 0) {
