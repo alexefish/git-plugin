@@ -40,7 +40,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
 
     private static final Pattern FILE_LOG_ENTRY = Pattern.compile("^:[0-9]{6} [0-9]{6} ([0-9a-f]{40}) ([0-9a-f]{40}) ([ACDMRTUX])(?>[0-9]+)?\t(.*)$");
     private static final Pattern AUTHOR_ENTRY = Pattern.compile("^"
-            + PREFIX_AUTHOR + IDENTITY + "$");
+            + PREFIX_AUTHOR + IDENTITY);
     private static final Pattern COMMITTER_ENTRY = Pattern.compile("^"
             + PREFIX_COMMITTER + IDENTITY + "$");
     private static final Pattern RENAME_SPLIT = Pattern.compile("^(.*?)\t(.*)$");
