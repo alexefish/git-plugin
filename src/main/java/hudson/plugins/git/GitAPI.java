@@ -359,14 +359,14 @@ public class GitAPI implements IGitAPI {
     }
 
     public void changelog(String revFrom, String revTo, OutputStream outputStream) throws GitException {
-        whatchanged(revFrom, revTo, outputStream, "--no-abbrev", "-M", "--pretty=raw");
+        whatchanged(revFrom, revTo, outputStream, "--shortstat");
     }
 
     private void whatchanged(String revFrom, String revTo, OutputStream outputStream, String... extraargs) throws GitException {
         String revSpec = revFrom + ".." + revTo;
 
         ArgumentListBuilder args = new ArgumentListBuilder();
-        args.add(getGitExe(), "whatchanged");
+        args.add(getGitExe(), "log");
         args.add(extraargs);
         args.add(revSpec);
 
