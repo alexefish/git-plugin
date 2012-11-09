@@ -367,7 +367,7 @@ public class GitAPI implements IGitAPI {
 
         if(revFrom.equals(revTo))
         {
-            recSpec = "-1"
+            revSpec = "-1";
         }
         else
         {
