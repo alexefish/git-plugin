@@ -359,7 +359,7 @@ public class GitAPI implements IGitAPI {
     }
 
     public void changelog(String revFrom, String revTo, OutputStream outputStream) throws GitException {
-        whatchanged(revFrom, revTo, outputStream, "--shortstat");
+        whatchanged(revFrom, revTo, outputStream, "--shortstat", "--date=raw");
     }
 
     private void whatchanged(String revFrom, String revTo, OutputStream outputStream, String... extraargs) throws GitException {
@@ -371,7 +371,7 @@ public class GitAPI implements IGitAPI {
         }
         else
         {
-            revSpec = revFrom + ".." + revTo;
+            revSpec = revTo + ".." + revFrom;
         }
 
         ArgumentListBuilder args = new ArgumentListBuilder();
@@ -409,7 +409,7 @@ public class GitAPI implements IGitAPI {
     	}
 
     	revName = r.getSha1String();
-    	writer.write(launchCommand("log", "--shortstat", "-1", revName));
+    	writer.write(launchCommand("log", "--shortstat", "-1", "--date=raw", revName));
 
         String result = "";
 

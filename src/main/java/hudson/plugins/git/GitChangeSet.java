@@ -24,6 +24,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Represents a change set.
@@ -31,7 +33,6 @@ import java.util.regex.Pattern;
  */
 public class GitChangeSet extends ChangeLogSet.Entry {
 
-    private static final String PREFIX_AUTHOR = "Author: ";
     private static final String PREFIX_COMMITTER = "committer ";
     private static final String IDENTITY = "(.*)<(.*)>";
     private static final String PREFIX_BRANCH = "Changes in branch ";
@@ -39,16 +40,16 @@ public class GitChangeSet extends ChangeLogSet.Entry {
 
 
     private static final Pattern FILE_LOG_ENTRY = Pattern.compile("^:[0-9]{6} [0-9]{6} ([0-9a-f]{40}) ([0-9a-f]{40}) ([ACDMRTUX])(?>[0-9]+)?\t(.*)$");
-    private static final Pattern AUTHOR_ENTRY = Pattern.compile("^"
-            + PREFIX_AUTHOR + IDENTITY);
+    private static final Pattern AUTHOR_ENTRY = Pattern.compile("Author: (.*) <(.*)>");
+    private static final Pattern DATE_ENTRY = Pattern.compile("Date: (.*) (.*)");
     private static final Pattern COMMITTER_ENTRY = Pattern.compile("^"
             + PREFIX_COMMITTER + IDENTITY + "$");
     private static final Pattern RENAME_SPLIT = Pattern.compile("^(.*?)\t(.*)$");
     private static final Pattern BRANCH_ENTRY = Pattern.compile("^"
             + PREFIX_BRANCH + BRANCH_PATTERN + " .*$");
-    private static final Pattern INSERTIONS = Pattern.compile("([0-9]+(?:\\.[0-9]*)?) files? changed");
-    private static final Pattern DELETIONS = Pattern.compile("([0-9]+(?:\\.[0-9]*)?) insertions?");
-    private static final Pattern CHANGED = Pattern.compile("([0-9]+(?:\\.[0-9]*)?) deletions?");
+    private static final Pattern INSERTIONS = Pattern.compile("([0-9]+(?:\\.[0-9]*)?) insertions?");
+    private static final Pattern DELETIONS = Pattern.compile("([0-9]+(?:\\.[0-9]*)?) deletions?");
+    private static final Pattern CHANGED = Pattern.compile("([0-9]+(?:\\.[0-9]*)?) files? changed");
 
     private static final String NULL_HASH = "0000000000000000000000000000000000000000";
     private String  branch;
@@ -81,6 +82,10 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         if (lines.size() > 0) {
             parseCommit(lines);
         }
+        else
+        {
+            throw new RuntimeException("No lines " + authorOrCommitter);
+        }
     }
 
     private void parseCommit(List<String> lines) {
@@ -101,37 +106,35 @@ public class GitChangeSet extends ChangeLogSet.Entry {
                         && branchMatcher.groupCount() >= 1) {
                     this.branch = branchMatcher.group(1).trim();
                 }
-            } else if (line.startsWith(PREFIX_COMMITTER)) {
-                Matcher committerMatcher = COMMITTER_ENTRY.matcher(line);
-                if (committerMatcher.matches()
-                        && committerMatcher.groupCount() >= 4) {
-                    this.committer = committerMatcher.group(1).trim();
-                    this.committerEmail = committerMatcher.group(2);
-                    this.committerTime = committerMatcher.group(3);
-                    this.committerTz = committerMatcher.group(4);
-                }
-            } else if (line.startsWith(PREFIX_AUTHOR)) {
+            } else if (line.startsWith("Author")) {
                 Matcher authorMatcher = AUTHOR_ENTRY.matcher(line);
-                if (authorMatcher.matches() && authorMatcher.groupCount() >= 4) {
+                if (authorMatcher.matches()) {
                     this.author = authorMatcher.group(1).trim();
                     this.authorEmail = authorMatcher.group(2);
-                    this.authorTime = authorMatcher.group(3);
-                    this.authorTz = authorMatcher.group(4);
+                    this.committer = authorMatcher.group(1).trim();
+                    this.committerEmail = authorMatcher.group(2);
                 }
-            } else if (line.startsWith(" ")){
-                // Parse changes
+            } else if(line.startsWith("Date")) {
+                Matcher dateMatcher = DATE_ENTRY.matcher(line);
+                if (dateMatcher.matches()) {
+                    this.authorTime = dateMatcher.group(1).trim();
+                    this.authorTz = dateMatcher.group(2);
+                    this.committerTime = dateMatcher.group(1).trim();
+                    this.committerTz = dateMatcher.group(2);
+                }
+            } else if (line.contains("changed")){
                 Matcher insertionsMatcher = INSERTIONS.matcher(line);
-                if(insertionsMatcher.matches())
+                if(insertionsMatcher.find())
                 {
                     this.insertions = Integer.parseInt(insertionsMatcher.group(1));
                 }
                 Matcher deletionsMatcher = DELETIONS.matcher(line);
-                if(deletionsMatcher.matches())
+                if(deletionsMatcher.find())
                 {
                     this.deletions = Integer.parseInt(deletionsMatcher.group(1));
                 }
                 Matcher filesChangedMatcher = CHANGED.matcher(line);
-                if(filesChangedMatcher.matches())
+                if(filesChangedMatcher.find())
                 {
                     this.filesChanged = Integer.parseInt(filesChangedMatcher.group(1));
                 }
@@ -317,11 +320,13 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         String csAuthorEmail;
 
         // If true, use the author field from git log rather than the committer.
-        if (authorOrCommitter) {
+        if (authorOrCommitter)
+        {
             csAuthor = this.author;
             csAuthorEmail = this.authorEmail;
         }
-        else {
+        else
+        {
             csAuthor = this.committer;
             csAuthorEmail = this.committerEmail;
         }
@@ -456,4 +461,6 @@ public class GitChangeSet extends ChangeLogSet.Entry {
             return id != null && id.equals(((GitChangeSet) obj).id);
         return false;
     }
+
+    private static final Logger LOGGER = Logger.getLogger(GitChangeSet.class.getName());
 }
