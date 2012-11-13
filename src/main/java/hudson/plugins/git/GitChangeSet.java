@@ -361,16 +361,28 @@ public class GitChangeSet extends ChangeLogSet.Entry {
 
     @Exported
     public Integer getInsertions() {
+        if(this.insertions == null)
+        {
+            this.insertions = 0;
+        }
         return this.insertions;
     }
 
     @Exported
     public Integer getFilesChanged() {
+        if(this.filesChanged == null)
+        {
+            this.filesChanged = 0;
+        }
         return this.filesChanged;
     }
 
     @Exported
     public Integer getDeletions() {
+        if(this.deletions == null)
+        {
+            this.deletions = 0;
+        }
         return this.deletions;
     }
 
