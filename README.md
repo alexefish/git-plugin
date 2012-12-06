@@ -5,3 +5,8 @@ A fork of the [Jenkins git-plugin](https://github.com/jenkinsci/git-plugin) proj
 This plugin provides `git log --short-stat` change set information via the Jenkins API instead of `whatchanged` as is the case with the original plugin.
 
 `git log --short-stat` provides more useful information such as files changed, deletions and insertions.
+
+### Todo
+
+* Fix tests
+* Clean up commit parsing
