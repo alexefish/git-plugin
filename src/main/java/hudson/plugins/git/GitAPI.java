@@ -371,7 +371,7 @@ public class GitAPI implements IGitAPI {
         }
         else
         {
-            revSpec = revTo + ".." + revFrom;
+            revSpec = revFrom + ".." + revTo;
         }
 
         ArgumentListBuilder args = new ArgumentListBuilder();

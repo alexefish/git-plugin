@@ -8,7 +8,7 @@
 
   <groupId>org.jenkinsci.plugins</groupId>
   <artifactId>git</artifactId>
-  <version>1.0.1</version>
+  <version>1.0.2</version>
   <packaging>hpi</packaging>
   <name>Jenkins GIT plugin - Alex Edition</name>
   <description>Don't update this..</description>
@@ -152,9 +152,9 @@
   </distributionManagement>
 
   <scm>
-    <connection>scm:git:git://github.com/jenkinsci/${project.artifctId}-plugin.git</connection>
-    <developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}-plugin.git</developerConnection>
-    <url>http://github.com/jenkinsci/${project.artifactId}-plugin</url>
+    <connection>scm:git://github.com/alexefish/git-plugin.git</connection>
+    <developerConnection>scm:git:git@github.com:alexefish/git-plugin.git</developerConnection>
+    <url>https://github.com/alexefish/git-plugin</url>
   </scm>
 
     <pluginRepositories>
