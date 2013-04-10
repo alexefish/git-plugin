@@ -328,11 +328,15 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         else
         {
             csAuthor = this.committer;
-            csAuthorEmail = this.committerEmail;
+            if(this.committerEmail != null) {
+                csAuthorEmail = this.committerEmail;
+            } else {
+                csAuthorEmail = "unknown@ustwo.co.uk";
+            }
         }
 
         if (csAuthor == null) {
-            throw new RuntimeException("No author in changeset " + id);
+            csAuthor = "Unknown";
         }
 
         return findOrCreateUser(csAuthor, csAuthorEmail, isCreateAccountBasedOnEmail());
@@ -349,7 +353,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         // If true, use the author field from git log rather than the committer.
         String csAuthor = authorOrCommitter ? author : committer;
         if (csAuthor == null)
-            throw new RuntimeException("No author in changeset " + id);
+            csAuthor = "Unknown";
         return csAuthor;
     }
 

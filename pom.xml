@@ -8,7 +8,7 @@
 
   <groupId>org.jenkinsci.plugins</groupId>
   <artifactId>ustwo-git</artifactId>
-  <version>1.0.2</version>
+  <version>1.0.3</version>
   <packaging>hpi</packaging>
   <name>Jenkins GIT plugin - Ustwo Edition</name>
   <description>For better commit stats in api requests</description>
