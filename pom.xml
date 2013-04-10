@@ -7,13 +7,12 @@
   </parent>
 
   <groupId>org.jenkinsci.plugins</groupId>
-  <artifactId>git</artifactId>
+  <artifactId>ustwo-git</artifactId>
   <version>1.0.2</version>
   <packaging>hpi</packaging>
-  <name>Jenkins GIT plugin - Alex Edition</name>
-  <description>Don't update this..</description>
-  <url>http://wiki.jenkins-ci.org/display/JENKINS/Git+Plugin</url>
-
+  <name>Jenkins GIT plugin - Ustwo Edition</name>
+  <description>For better commit stats in api requests</description>
+  <url>https://github.com/alexefish/git-plugin/blob/master/README.md</url>
   <build>
     <pluginManagement>
       <plugins>
@@ -81,6 +80,11 @@
 			<name>Nicolas De Loof</name>
 			<email>nicolas.deloof@gmail.com</email>
 		</developer>
+    <developer>
+      <id>alexfish</id>
+      <name>Alex Fish</name>
+      <email>fish@ustwo.co.uk</email>
+    </developer>
 	</developers>
 
 
@@ -143,25 +147,12 @@
       <optional>true</optional>
     </dependency>
   </dependencies>
-
-  <distributionManagement>
-    <repository>
-      <id>maven.jenkins-ci.org</id>
-      <url>http://maven.jenkins-ci.org:8081/content/repositories/releases/</url>
-    </repository>
-  </distributionManagement>
-
-  <scm>
-    <connection>scm:git://github.com/alexefish/git-plugin.git</connection>
-    <developerConnection>scm:git:git@github.com:alexefish/git-plugin.git</developerConnection>
-    <url>https://github.com/alexefish/git-plugin</url>
-  </scm>
-
-    <pluginRepositories>
+  <pluginRepositories>
         <pluginRepository>
             <id>repo.jenkins-ci.org</id>
             <url>http://repo.jenkins-ci.org/public/</url>
         </pluginRepository>
     </pluginRepositories>
+
 </project>
 

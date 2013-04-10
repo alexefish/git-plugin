@@ -226,7 +226,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
 
     @Override
     public long getTimestamp() {
-        return Long.parseLong(authorOrCommitter ? authorTime : committerTime) * 1000L;
+        return 0;
     }
 
     @Override

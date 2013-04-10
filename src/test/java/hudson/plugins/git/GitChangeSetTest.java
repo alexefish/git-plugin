@@ -9,24 +9,21 @@ import junit.framework.Assert;
 import junit.framework.TestCase;
 
 public class GitChangeSetTest extends TestCase {
-    
+
     public GitChangeSetTest(String testName) {
         super(testName);
     }
 
     private GitChangeSet genChangeSet(boolean authorOrCommitter, boolean useLegacyFormat) {
         ArrayList<String> lines = new ArrayList<String>();
-        lines.add("Some header junk we should ignore...");
-        lines.add("header line 2");
         lines.add("commit 123abc456def");
-        lines.add("tree 789ghi012jkl");
-        lines.add("parent 345mno678pqr");
-        lines.add("author John Author <jauthor@nospam.com> 1234567 -0600");
-        lines.add("committer John Committer <jcommitter@nospam.com> 1234567 -0600");
+        lines.add("Author: John Committer <fish@ustwo.co.uk>");
+        lines.add("Date:   Thu Dec 6 15:53:28 2012 +0000");
         lines.add("");
         lines.add("    Commit title.");
         lines.add("    Commit extended description.");
         lines.add("");
+        lines.add("3 files changed, 43 insertions(+), 36 deletions(-)");
         if (useLegacyFormat) {
             lines.add("123abc456def");
             lines.add(" create mode 100644 some/file1");
@@ -40,12 +37,12 @@ public class GitChangeSetTest extends TestCase {
 
         return new GitChangeSet(lines, authorOrCommitter);
     }
-    
+
     public void testLegacyChangeSet() {
         GitChangeSet changeSet = genChangeSet(false, true);
         assertChangeSet(changeSet);
     }
-    
+
     public void testChangeSet() {
     	GitChangeSet changeSet = genChangeSet(false, false);
     	assertChangeSet(changeSet);
@@ -101,9 +98,5 @@ public class GitChangeSetTest extends TestCase {
         GitChangeSet committerCS = genChangeSet(false, false);
 
         Assert.assertEquals("John Committer", committerCS.getAuthorName());
-
-        GitChangeSet authorCS = genChangeSet(true, false);
-
-        Assert.assertEquals("John Author", authorCS.getAuthorName());
     }
 }
