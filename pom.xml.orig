@@ -6,9 +6,14 @@
     <version>1.466</version>
   </parent>
 
+<<<<<<< HEAD
   <groupId>org.jenkinsci.plugins</groupId>
   <artifactId>ustwo-git</artifactId>
   <version>1.0.3</version>
+=======
+  <artifactId>git</artifactId>
+  <version>1.4.1-SNAPSHOT</version>
+>>>>>>> 58997a88a07fb64c173c8e7148b8d28ac8a92da5
   <packaging>hpi</packaging>
   <name>Jenkins GIT plugin - Ustwo Edition</name>
   <description>For better commit stats in api requests</description>
@@ -153,6 +158,24 @@
     </repository>
   </repositories>
 
+<<<<<<< HEAD
+	<developers>
+		<developer>
+			<id>kohsuke</id>
+			<name>Kohsuke Kawaguchi</name>
+		</developer>
+		<developer>
+			<id>ndeloof</id>
+			<name>Nicolas De Loof</name>
+			<email>nicolas.deloof@gmail.com</email>
+		</developer>
+    <developer>
+      <id>alexfish</id>
+      <name>Alex Fish</name>
+      <email>fish@ustwo.co.uk</email>
+    </developer>
+	</developers>
+=======
     <developers>
         <developer>
             <id>kohsuke</id>
@@ -164,6 +187,7 @@
             <email>nicolas.deloof@gmail.com</email>
         </developer>
     </developers>
+>>>>>>> 58997a88a07fb64c173c8e7148b8d28ac8a92da5
 
 
   <dependencies>
@@ -237,6 +261,9 @@
       <optional>true</optional>
     </dependency>
   </dependencies>
+<<<<<<< HEAD
+  <pluginRepositories>
+=======
 
   <distributionManagement>
     <repository>
@@ -252,6 +279,7 @@
   </scm>
 
     <pluginRepositories>
+>>>>>>> 58997a88a07fb64c173c8e7148b8d28ac8a92da5
         <pluginRepository>
             <id>repo.jenkins-ci.org</id>
             <url>http://repo.jenkins-ci.org/public/</url>

@@ -2,7 +2,7 @@
   <f:entry field="url" title="URL">
     <f:textbox/>
   </f:entry>
-  <f:entry field="version" title="Version">
+  <f:entry field="repo" title="Repository name in Phab">
     <f:textbox/>
   </f:entry>
 </j:jelly>

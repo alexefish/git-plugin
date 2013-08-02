@@ -23,14 +23,15 @@
  */
 package hudson.plugins.git;
 
+import hudson.Util;
 import hudson.model.Action;
 import hudson.model.InvisibleAction;
-import hudson.model.queue.FoldableAction;
 import hudson.model.Queue;
 import hudson.model.Queue.QueueAction;
-import hudson.Util;
-
+import hudson.model.queue.FoldableAction;
 import org.eclipse.jgit.lib.ObjectId;
+import org.jenkinsci.plugins.gitclient.GitClient;
+
 import java.io.Serializable;
 import java.util.List;
 import java.util.logging.Logger;
@@ -58,7 +59,12 @@ public class RevisionParameterAction extends InvisibleAction implements Serializ
         this.combineCommits = combineCommits;
     }
 
+    @Deprecated
     public Revision toRevision(IGitAPI git) {
+        return toRevision((GitClient) git);
+    }
+
+    public Revision toRevision(GitClient git) {
         ObjectId sha1 = git.revParse(commit);
         Revision revision = new Revision(sha1);
         // TODO: if commit is a branch, retain that information instead of making it 'detached'

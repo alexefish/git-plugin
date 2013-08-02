@@ -2,21 +2,13 @@ package hudson.plugins.git.util;
 
 import hudson.Extension;
 import hudson.model.TaskListener;
-import hudson.plugins.git.Branch;
-import hudson.plugins.git.BranchSpec;
-import hudson.plugins.git.GitException;
-import hudson.plugins.git.IGitAPI;
-import hudson.plugins.git.Messages;
-import hudson.plugins.git.Revision;
+import hudson.plugins.git.*;
+import org.eclipse.jgit.lib.Repository;
+import org.jenkinsci.plugins.gitclient.GitClient;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-
-import org.kohsuke.stapler.DataBoundConstructor;
+import java.util.*;
 
 /**
  * Git build chooser which will select all branches <b>except</b> for those which match the
@@ -44,8 +36,8 @@ public class InverseBuildChooser extends BuildChooser {
 
     @Override
     public Collection<Revision> getCandidateRevisions(boolean isPollCall,
-            String singleBranch, IGitAPI git, TaskListener listener,
-            BuildData buildData) throws GitException, IOException {
+            String singleBranch, GitClient git, TaskListener listener,
+            BuildData buildData, BuildChooserContext context) throws GitException, IOException {
 
         GitUtils utils = new GitUtils(listener, git);
         List<Revision> branchRevs = new ArrayList<Revision>(utils.getAllBranchRevisions());
@@ -98,7 +90,12 @@ public class InverseBuildChooser extends BuildChooser {
         }
 
         // Sort revisions by the date of commit, old to new, to ensure fairness in scheduling
-        Collections.sort(branchRevs, new CommitTimeComparator(utils.git.getRepository()));
+        Repository repository = utils.git.getRepository();
+        try {
+            Collections.sort(branchRevs, new CommitTimeComparator(repository));
+        } finally {
+            repository.close();
+        }
         return branchRevs;
     }
 

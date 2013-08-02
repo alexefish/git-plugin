@@ -3,14 +3,19 @@ package hudson.plugins.git;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.model.TaskListener;
+import hudson.model.UserProperty;
 import hudson.model.User;
+import hudson.tasks.Mailer;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.PersonIdent;
+import org.jenkinsci.plugins.gitclient.Git;
+import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jvnet.hudson.test.HudsonTestCase;
 
 public class TestGitRepo {
@@ -22,7 +27,7 @@ public class TestGitRepo {
      */
 	public File gitDir; // was "workDir"
 	public FilePath gitDirPath; // was "workspace"
-	public GitAPI git;
+	public GitClient git;
 	
 	private EnvVars envVars;
 	
@@ -36,57 +41,44 @@ public class TestGitRepo {
 		envVars = new EnvVars();
 		
 		gitDir = forTest.createTmpDir();
-		User.get(johnDoe.getName(), true);
-		User.get(janeDoe.getName(), true);
+		User john = User.get(johnDoe.getName(), true);
+		UserProperty johnsMailerProperty = new Mailer.UserProperty(johnDoe.getEmailAddress());
+		john.addProperty(johnsMailerProperty);
 		
-		// initialize the environment
-		setAuthor(johnDoe);
-		setCommitter(johnDoe);
-		
+		User jane = User.get(janeDoe.getName(), true);
+		UserProperty janesMailerProperty = new Mailer.UserProperty(janeDoe.getEmailAddress());
+		jane.addProperty(janesMailerProperty);
+
 		// initialize the git interface.
 		gitDirPath = new FilePath(gitDir);
-		git = new GitAPI("git", gitDirPath, listener, envVars);
-		
-		// finally: initialize the repo
+		git = Git.with(listener, envVars).in(gitDir).getClient();
+
+        // finally: initialize the repo
 		git.init();
 	}
 	
-	public void setAuthor(final PersonIdent author) {
-    	envVars.put("GIT_AUTHOR_NAME", author.getName());
-        envVars.put("GIT_AUTHOR_EMAIL", author.getEmailAddress());
-    }
-
-   public void setCommitter(final PersonIdent committer) {
-        envVars.put("GIT_COMMITTER_NAME", committer.getName());
-        envVars.put("GIT_COMMITTER_EMAIL", committer.getEmailAddress());
-    }
-
     public void commit(final String fileName, final PersonIdent committer, final String message) throws GitException {
-        setAuthor(committer);
-        setCommitter(committer);
-        FilePath file = gitDirPath.child(fileName);
-        try {
-            file.write(fileName, null);
-        } catch (Exception e) {
-            throw new GitException("unable to write file", e);
-        }
-
-        git.add(fileName);
-        git.launchCommand("commit", "-m", message);
+        commit(fileName, fileName, committer, committer, message);
     }
 
-    public void commit(final String fileName, final PersonIdent author, final PersonIdent committer,
+    public void commit(final String fileName, final PersonIdent author, final PersonIdent committer, final String message) throws GitException {
+        commit(fileName, fileName, author, committer, message);
+    }
+
+    public void commit(final String fileName, final String fileContent, final PersonIdent committer, final String message) throws GitException {
+        commit(fileName, fileContent, committer, committer, message);
+    }
+
+    public void commit(final String fileName, final String fileContent, final PersonIdent author, final PersonIdent committer,
                         final String message) throws GitException {
-        setAuthor(author);
-        setCommitter(committer);
         FilePath file = gitDirPath.child(fileName);
         try {
-            file.write(fileName, null);
+            file.write(fileContent, null);
         } catch (Exception e) {
             throw new GitException("unable to write file", e);
         }
         git.add(fileName);
-        git.launchCommand("commit", "-m", message);
+        git.commit(message, author, committer);
     }
 
     public List<UserRemoteConfig> remoteConfigs() throws IOException {

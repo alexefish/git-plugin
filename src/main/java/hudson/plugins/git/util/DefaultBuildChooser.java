@@ -2,25 +2,16 @@ package hudson.plugins.git.util;
 
 import hudson.Extension;
 import hudson.model.TaskListener;
-import hudson.plugins.git.Branch;
-import hudson.plugins.git.BranchSpec;
-import hudson.plugins.git.GitException;
-import hudson.plugins.git.GitSCM;
-import hudson.plugins.git.IGitAPI;
-import hudson.plugins.git.Messages;
-import hudson.plugins.git.Revision;
-import org.eclipse.jgit.transport.RemoteConfig;
-import org.kohsuke.stapler.DataBoundConstructor;
+import hudson.plugins.git.*;
 import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.transport.RemoteConfig;
+import org.jenkinsci.plugins.gitclient.GitClient;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
 import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static java.util.Collections.emptyList;
 
@@ -42,8 +33,9 @@ public class DefaultBuildChooser extends BuildChooser {
      * @throws IOException
      * @throws GitException
      */
+    @Override
     public Collection<Revision> getCandidateRevisions(boolean isPollCall, String singleBranch,
-                                                      IGitAPI git, TaskListener listener, BuildData data)
+                                                      GitClient git, TaskListener listener, BuildData data, BuildChooserContext context)
         throws GitException, IOException {
 
         verbose(listener,"getCandidateRevisions({0},{1},,,{2}) considering branches to build",isPollCall,singleBranch,data);
@@ -98,7 +90,7 @@ public class DefaultBuildChooser extends BuildChooser {
         return revisions;
     }
 
-    private Collection<Revision> getHeadRevision(boolean isPollCall, String singleBranch, IGitAPI git, TaskListener listener, BuildData data) {
+    private Collection<Revision> getHeadRevision(boolean isPollCall, String singleBranch, GitClient git, TaskListener listener, BuildData data) {
         try {
             ObjectId sha1 = git.revParse(singleBranch);
             verbose(listener, "rev-parse {0} -> {1}", singleBranch, sha1);
@@ -229,7 +221,12 @@ public class DefaultBuildChooser extends BuildChooser {
 
         // 5. sort them by the date of commit, old to new
         // this ensures the fairness in scheduling.
-        Collections.sort(revs,new CommitTimeComparator(utils.git.getRepository()));
+        Repository repository = utils.git.getRepository();
+        try {
+            Collections.sort(revs,new CommitTimeComparator(repository));
+        } finally {
+            repository.close();
+        }
 
         return revs;
     }

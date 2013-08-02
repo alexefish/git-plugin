@@ -4,42 +4,29 @@ import com.infradna.tool.bridge_method_injector.WithBridgeMethods;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
-import hudson.model.BuildListener;
-import hudson.model.Environment;
-import hudson.model.Hudson;
-import hudson.model.Node;
-import hudson.model.TaskListener;
-import hudson.slaves.NodeProperty;
-import hudson.model.StreamBuildListener;
+import hudson.model.*;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.GitException;
-import hudson.plugins.git.IGitAPI;
 import hudson.plugins.git.Revision;
+import hudson.slaves.NodeProperty;
+import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.revwalk.RevWalk;
+import org.eclipse.jgit.revwalk.filter.RevFilter;
+import org.jenkinsci.plugins.gitclient.GitClient;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.revwalk.RevWalk;
-import org.eclipse.jgit.revwalk.filter.RevFilter;
-
 public class GitUtils {
-    IGitAPI git;
+    GitClient git;
     TaskListener listener;
 
-    public GitUtils(TaskListener listener, IGitAPI git) {
+    public GitUtils(TaskListener listener, GitClient git) {
         this.git = git;
         this.listener = listener;
     }
@@ -53,8 +40,7 @@ public class GitUtils {
      */
     public Collection<Revision> getAllBranchRevisions() throws GitException, IOException {
         Map<ObjectId, Revision> revisions = new HashMap<ObjectId, Revision>();
-        List<Branch> branches = git.getRemoteBranches();
-        for (Branch b : branches) {
+        for (Branch b : git.getRemoteBranches()) {
             Revision r = revisions.get(b.getSHA1());
             if (r == null) {
                 r = new Revision(b.getSHA1());
@@ -117,13 +103,15 @@ public class GitUtils {
         ObjectId shaJ;
         ObjectId commonAncestor;
         RevWalk walk = null;
+        Repository repository = null;
         final long start = System.currentTimeMillis();
         long calls = 0;
         if (log)
             LOGGER.fine(MessageFormat.format(
                     "Computing merge base of {0}  branches", l.size()));
         try {
-            walk = new RevWalk(git.getRepository());
+            repository = git.getRepository();
+            walk = new RevWalk(repository);
             walk.setRetainBody(false);
             walk.setRevFilter(RevFilter.MERGE_BASE);
             for (int i = 0; i < l.size(); i++)
@@ -160,8 +148,8 @@ public class GitUtils {
         } catch (IOException e) {
             throw new GitException("Error computing merge base", e);
         } finally {
-            if (walk != null)
-                walk.release();
+            if (walk != null) walk.release();
+            if (repository != null) repository.close();
         }
         if (log)
             LOGGER.fine(MessageFormat.format(
@@ -187,7 +175,7 @@ public class GitUtils {
         StreamBuildListener buildListener = new StreamBuildListener((OutputStream)listener.getLogger());
         AbstractBuild b = (AbstractBuild)p.getLastBuild();
 
-        if (b != null) {
+        if (reuseLastBuildEnv && b != null) {
             Node lastBuiltOn = b.getBuiltOn();
 
             if (lastBuiltOn != null) {
@@ -216,7 +204,7 @@ public class GitUtils {
         if(rootUrl!=null) {
             env.put("HUDSON_URL", rootUrl); // Legacy.
             env.put("JENKINS_URL", rootUrl);
-            env.put("BUILD_URL", rootUrl+b.getUrl());
+            if( b != null) env.put("BUILD_URL", rootUrl+b.getUrl());
             env.put("JOB_URL", rootUrl+p.getUrl());
         }
 

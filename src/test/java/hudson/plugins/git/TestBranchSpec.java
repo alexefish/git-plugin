@@ -45,4 +45,37 @@ public class TestBranchSpec extends TestCase {
         Assert.assertTrue(p.matches("origin/x"));
         Assert.assertFalse(p.matches("origin/my-branch/b1"));
     }
+    
+    public void testEmptyName() {
+    	BranchSpec branchSpec = new BranchSpec("");
+    	assertEquals("**",branchSpec.getName());
+    }
+    
+    public void testNullName() {
+    	boolean correctExceptionThrown = false;
+    	try {
+    		BranchSpec branchSpec = new BranchSpec(null);
+    	} catch (IllegalArgumentException e) {
+    		correctExceptionThrown = true;
+    	}
+    	assertTrue(correctExceptionThrown);
+    }
+    
+    public void testNameTrimming() {
+    	BranchSpec branchSpec = new BranchSpec(" master ");
+    	assertEquals("master",branchSpec.getName());
+    	branchSpec.setName(" other ");
+    	assertEquals("other",branchSpec.getName());
+    }
+    
+    public void testUsesJavaPatternDirectlyIfPrefixedWithColon() {
+    	BranchSpec m = new BranchSpec(":^(?!(origin/prefix)).*");
+    	assertTrue(m.matches("origin"));
+    	assertTrue(m.matches("origin/master"));
+    	assertTrue(m.matches("origin/feature"));
+
+    	assertFalse(m.matches("origin/prefix_123"));
+    	assertFalse(m.matches("origin/prefix"));
+    	assertFalse(m.matches("origin/prefix-abc"));
+    }
 }

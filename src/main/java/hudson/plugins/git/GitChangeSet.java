@@ -1,17 +1,15 @@
 package hudson.plugins.git;
 
-import static hudson.Util.fixEmpty;
-
-import hudson.plugins.git.GitSCM.DescriptorImpl;
 import hudson.MarkupText;
 import hudson.model.Hudson;
 import hudson.model.User;
+import hudson.plugins.git.GitSCM.DescriptorImpl;
 import hudson.scm.ChangeLogAnnotator;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.ChangeLogSet.AffectedFile;
 import hudson.scm.EditType;
 import hudson.tasks.Mailer;
-
+import hudson.tasks.Mailer.UserProperty;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
@@ -27,6 +25,8 @@ import java.util.regex.Pattern;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static hudson.Util.fixEmpty;
+
 /**
  * Represents a change set.
  * @author Nigel Magnay
@@ -34,7 +34,7 @@ import java.util.logging.Logger;
 public class GitChangeSet extends ChangeLogSet.Entry {
 
     private static final String PREFIX_COMMITTER = "committer ";
-    private static final String IDENTITY = "(.*)<(.*)>";
+    private static final String IDENTITY = "([^<]*)<(.*)> (.*) (.*)";//starts with everything-but
     private static final String PREFIX_BRANCH = "Changes in branch ";
     private static final String BRANCH_PATTERN = "([-_a-zA-Z0-9/]*),";
 
@@ -285,6 +285,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
                 try {
                     user = User.get(csAuthorEmail, true);
                     user.setFullName(csAuthor);
+                    user.addProperty(new Mailer.UserProperty(csAuthorEmail));
                     user.save();
                 } catch (IOException e) {
                     // add logging statement?
@@ -297,7 +298,7 @@ public class GitChangeSet extends ChangeLogSet.Entry {
                 user = User.get(csAuthorEmail.split("@")[0], true);
         }
         // set email address for user if none is already available
-        if (fixEmpty(csAuthorEmail) != null && user.getProperty(Mailer.UserProperty.class)==null) {
+        if (fixEmpty(csAuthorEmail) != null && !isMailerPropertySet(user)) {
             try {
                 user.addProperty(new Mailer.UserProperty(csAuthorEmail));
             } catch (IOException e) {
@@ -307,7 +308,13 @@ public class GitChangeSet extends ChangeLogSet.Entry {
         return user;
     }
 
-    private boolean isCreateAccountBasedOnEmail() {
+	private boolean isMailerPropertySet(User user) {
+		UserProperty property = user.getProperty(Mailer.UserProperty.class);
+		return property != null
+            && property.hasExplicitlyConfiguredAddress();
+	}
+
+	private boolean isCreateAccountBasedOnEmail() {
         DescriptorImpl descriptor = (DescriptorImpl) Hudson.getInstance().getDescriptor(GitSCM.class);
 
         return descriptor.isCreateAccountBasedOnEmail();

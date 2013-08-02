@@ -1,22 +1,14 @@
 package hudson.plugins.git;
 
-import hudson.FilePath;
 import hudson.model.TaskListener;
 import hudson.plugins.git.util.GitUtils;
+import org.eclipse.jgit.lib.ObjectId;
+import org.jenkinsci.plugins.gitclient.GitClient;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-
-import org.eclipse.jgit.lib.ObjectId;
 
 /**
  * A common usecase for git submodules is to have child submodules, and a parent 'configuration' project that ties the
@@ -26,7 +18,7 @@ import org.eclipse.jgit.lib.ObjectId;
  * @author nigelmagnay
  */
 public class SubmoduleCombinator {
-    IGitAPI      git;
+    GitClient git;
     File         workspace;
     TaskListener listener;
 
@@ -35,7 +27,7 @@ public class SubmoduleCombinator {
   
     Collection<SubmoduleConfig> submoduleConfig;
   
-    public SubmoduleCombinator(IGitAPI git, TaskListener listener, File workspace,
+    public SubmoduleCombinator(GitClient git, TaskListener listener, File workspace,
                                Collection<SubmoduleConfig> cfg) {
         this.git = git;
         this.listener = listener;
@@ -48,9 +40,8 @@ public class SubmoduleCombinator {
         Map<IndexEntry, Collection<Revision>> moduleBranches = new HashMap<IndexEntry, Collection<Revision>>();
 
         for (IndexEntry submodule : git.getSubmodules("HEAD")) {
-            File subdir = new File(workspace, submodule.getFile());
-            IGitAPI subGit = new GitAPI(git.getGitExe(), new FilePath(subdir), listener, git.getEnvironment(), git.getReference());
-      
+            GitClient subGit = git.subGit(submodule.getFile());
+
             GitUtils gu = new GitUtils(listener, subGit);
             Collection<Revision> items = gu.filterTipBranches(gu.getAllBranchRevisions());
       
@@ -169,32 +160,12 @@ public class SubmoduleCombinator {
         for (Entry<IndexEntry, Revision> setting : settings.entrySet()) {
             IndexEntry submodule = setting.getKey();
             Revision branch = setting.getValue();
-            File subdir = new File(workspace, submodule.getFile());
-            IGitAPI subGit = new GitAPI(git.getGitExe(), new FilePath(subdir),
-                    listener, git.getEnvironment(), git.getReference());
-
-            subGit.checkout(branch.sha1.name());
-            git.add(submodule.file);
+            GitClient subGit = git.subGit(submodule.getFile());
+            subGit.checkout(branch.getSha1().name());
+            git.add(submodule.getFile());
         }
     
-        try {
-            File f = File.createTempFile("gitcommit", ".txt");
-            FileOutputStream fos = null;
-            try {
-                fos = new FileOutputStream(f);
-                fos.write(commit.toString().getBytes());
-            } finally {
-                if (fos != null)
-                    fos.close();
-            }
-            git.commit(f);
-            f.delete();
-        }
-        catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-
+        git.commit(commit.toString());
     }
 
     public int difference(Map<IndexEntry, Revision> item, List<IndexEntry> entries) {
@@ -209,7 +180,7 @@ public class SubmoduleCombinator {
 
             if (b == null) return -1;
 
-            if (!entry.object.equals(b.getSha1())) difference++;
+            if (!entry.getObject().equals(b.getSha1())) difference++;
 
         }
         return difference;

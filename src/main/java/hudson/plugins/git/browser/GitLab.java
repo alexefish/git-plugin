@@ -6,14 +6,13 @@ import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.GitChangeSet.Path;
 import hudson.scm.EditType;
 import hudson.scm.RepositoryBrowser;
-
-import java.io.IOException;
-import java.net.URL;
-import java.net.MalformedURLException;
-
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
+
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 /**
  * Git Browser for GitLab
@@ -22,9 +21,11 @@ public class GitLab extends GitRepositoryBrowser {
 
     private static final long serialVersionUID = 1L;
     private final URL url;
+    private final double version;
 
     @DataBoundConstructor
-    public GitLab(String url) throws MalformedURLException {
+    public GitLab(String url, String version) throws MalformedURLException {
+        this.version = Double.valueOf(version);
         this.url = normalizeToEndWithSlash(new URL(url));
     }
 
@@ -32,6 +33,9 @@ public class GitLab extends GitRepositoryBrowser {
         return url;
     }
 
+    public double getVersion() {
+        return version;
+    }
 
     /**
      * Creates a link to the changeset
@@ -44,7 +48,9 @@ public class GitLab extends GitRepositoryBrowser {
      */
     @Override
     public URL getChangeSetLink(GitChangeSet changeSet) throws IOException {
-        return new URL(url, "commits/" + changeSet.getId().toString());
+        String  commitPrefix;
+
+        return new URL(url, calculatePrefix() + changeSet.getId().toString());
     }
 
     /**
@@ -59,7 +65,7 @@ public class GitLab extends GitRepositoryBrowser {
     @Override
     public URL getDiffLink(Path path) throws IOException {
         final GitChangeSet changeSet = path.getChangeSet();
-        return new URL(url, "commits/" + changeSet.getId().toString() + "#" + path.getPath());
+        return new URL(url, calculatePrefix() + changeSet.getId().toString() + "#" + path.getPath());
     }
 
     /**
@@ -75,7 +81,12 @@ public class GitLab extends GitRepositoryBrowser {
         if (path.getEditType().equals(EditType.DELETE)) {
             return getDiffLink(path);
         } else {
-            final String spec = "/" + path.getChangeSet().getId() + "/tree/" + path.getPath();
+            String spec;
+            if(getVersion() >= 5.1) {
+                spec = "blob/" + path.getChangeSet().getId() + "/" + path.getPath();
+            } else {
+                spec = path.getChangeSet().getId() + "/tree/" + path.getPath();
+            }
             return new URL(url, url.getPath() + spec);
         }
     }
@@ -91,5 +102,13 @@ public class GitLab extends GitRepositoryBrowser {
             return req.bindParameters(GitLab.class, "Gitlab.");
         }
     }
+
+    private String calculatePrefix() {
+        if(getVersion() >= 3){
+            return "commit/";
+        }
+
+        return "commits/";
+    } 
 
 }

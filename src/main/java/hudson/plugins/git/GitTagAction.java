@@ -3,32 +3,25 @@ package hudson.plugins.git;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
-import hudson.model.AbstractBuild;
-import hudson.model.Describable;
-import hudson.model.Descriptor;
-import hudson.model.Hudson;
-import hudson.model.TaskListener;
-import hudson.model.TaskThread;
+import hudson.model.*;
 import hudson.plugins.git.util.BuildData;
 import hudson.remoting.VirtualChannel;
 import hudson.scm.AbstractScmTagAction;
 import hudson.security.Permission;
 import hudson.util.CopyOnWriteMap;
 import hudson.util.MultipartFormDataParser;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import javax.servlet.ServletException;
-
+import jenkins.model.*;
+import org.jenkinsci.plugins.gitclient.Git;
+import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
+
+import javax.servlet.ServletException;
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
 
 /**
  * @author Vivek Pandey
@@ -49,13 +42,13 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
         super(build);
         List<String> val = new ArrayList<String>();
         this.ws = build.getWorkspace().getRemote();
-        for (Branch b : buildData.lastBuild.revision.branches) {
+        for (Branch b : buildData.lastBuild.revision.getBranches()) {
             tags.put(b.getName(), new ArrayList<String>());
         }
     }
 
     public Descriptor<GitTagAction> getDescriptor() {
-        return Hudson.getInstance().getDescriptorOrDie(getClass());
+        return Jenkins.getInstance().getDescriptorOrDie(getClass());
     }
 
     @Override
@@ -190,9 +183,15 @@ public class GitTagAction extends AbstractScmTagAction implements Describable<Gi
 
                         public Object[] invoke(File localWorkspace, VirtualChannel channel)
                                 throws IOException {
-                            IGitAPI git = new GitAPI("git", workspace, listener, environment);
-                            String buildNum = "hudson-" + build.getProject().getName() + "-" + tagSet.get(b);
-                            git.tag(tagSet.get(b), "Hudson Build #" + buildNum);
+
+                            GitClient git = Git.with(listener, environment)
+                                    .in(localWorkspace)
+                                    .getClient();
+
+                            String buildNum = "jenkins-" 
+                                             + build.getProject().getName().replace(" ", "_") 
+                                             + "-" + tagSet.get(b);
+                            git.tag(tagSet.get(b), "Jenkins Build #" + buildNum);
                             return new Object[]{null, build};
                         }
                     });

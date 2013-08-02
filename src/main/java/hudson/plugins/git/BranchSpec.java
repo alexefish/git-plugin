@@ -1,12 +1,13 @@
 package hudson.plugins.git;
 
+import org.kohsuke.stapler.DataBoundConstructor;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.StringTokenizer;
 import java.util.regex.Pattern;
-import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
  * A specification of branches to build. Rather like a refspec.
@@ -29,18 +30,18 @@ public class BranchSpec implements Serializable {
         return name;
     }
 
-    public void setName(String value) {
-        this.name = value;
-    }
-
-    @DataBoundConstructor
-    public BranchSpec(String name) {
-        if(name == null)
+    public void setName(String name) {
+    	if(name == null)
             throw new IllegalArgumentException();
         else if(name.length() == 0)
             this.name = "**";
         else
-            this.name = name;
+            this.name = name.trim();
+    }
+
+    @DataBoundConstructor
+    public BranchSpec(String name) {
+        setName(name);
     }
 
     public String toString() {
@@ -77,6 +78,13 @@ public class BranchSpec implements Serializable {
         // return the saved pattern if available
         if (pattern != null)
             return pattern;
+        
+        // use regex syntax directly if name starts with colon
+        if (name.startsWith(":") && name.length() > 1) {
+        	String regexSubstring = name.substring(1, name.length());
+        	pattern = Pattern.compile(regexSubstring);
+        	return pattern;
+        }
         
         // if an unqualified branch was given add a "*/" so it will match branches
         // from remote repositories as the user probably intended

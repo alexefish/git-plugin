@@ -1,22 +1,26 @@
 package hudson.plugins.git;
 
-import java.io.IOException;
-import java.io.Serializable;
-
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Util;
-import hudson.model.*;
+import hudson.model.AbstractDescribableImpl;
+import hudson.model.Descriptor;
+import hudson.model.Item;
+import hudson.model.TaskListener;
 import hudson.util.FormValidation;
-
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
-import org.kohsuke.stapler.AncestorInPath;
+import org.jenkinsci.plugins.gitclient.CliGitAPIImpl;
+import hudson.plugins.git.GitTool;
+import org.jenkinsci.plugins.gitclient.Git;
+import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
+
+import java.io.IOException;
+import java.io.Serializable;
 
 @ExportedBean
 public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> implements Serializable {
@@ -69,13 +73,14 @@ public class UserRemoteConfig extends AbstractDescribableImpl<UserRemoteConfig> 
 
             // get git executable on master
             final EnvVars environment = new EnvVars(System.getenv()); // GitUtils.getPollEnvironment(project, null, launcher, TaskListener.NULL, false);
-            GitTool.DescriptorImpl descriptor = Jenkins.getInstance().getDescriptorByType(GitTool.DescriptorImpl.class);
-            String gitExe = descriptor.getInstallations()[0].forNode(Jenkins.getInstance(), TaskListener.NULL).getGitExe();
-            IGitAPI git = new GitAPI(gitExe, null, TaskListener.NULL, environment, null);
+
+            GitClient git = Git.with(TaskListener.NULL, environment)
+                    .using(GitTool.getDefaultInstallation().getGitExe())
+                    .getClient();
 
             // attempt to connect the provided URL
             try {
-                String headRevision = git.getHeadRev(url, "HEAD");
+                git.getHeadRev(url, "HEAD");
             } catch (GitException e) {
                 return FormValidation.error(Messages.UserRemoteConfig_FailedToConnect(e.getMessage()));
             }
